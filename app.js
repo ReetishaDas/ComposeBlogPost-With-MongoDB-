@@ -26,7 +26,7 @@ app.get("/", function (req, res) {
 });
 
 app.get("/blogPosts/:postName", function (req, res) {
-  //converting all to lowercase anf without kebabs (-) 
+  //converting all to lowercase
   const requestedTitle = _.lowerCase(req.params.postName);
 
   mainPost.forEach(element => {
