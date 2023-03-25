@@ -1,8 +1,10 @@
 //jshint esversion:6
 //LODASH ==== string features for NodeJS (like java concat lower case etc)
+//WITH MONGOOSE
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const ejs = require("ejs");
 var _ = require('lodash');
 
@@ -16,35 +18,48 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-let mainPost = [];
+//Setting up connection
+main().catch((err) => console.log("Mongo Server Not Connected"));
+
+async function main() {
+  const url = "mongodb://127.0.0.1:27017";
+  const dbPath = "/blogpostDB";
+  await mongoose.connect(url + dbPath, {
+    useNewUrlParser: true,
+  });
+
+  const composeSchema = mongoose.Schema({
+    title: String,
+    content: String
+  });
+  const Post = mongoose.model("Post", composeSchema);
+
 
 app.get("/", function (req, res) {
-  res.render("home", {
-    homeDefaultContent: homeStartingContent,
-    homeData: mainPost
+  Post.find({}).then(function(foundPosts){
+    res.render("home", {
+      homeDefaultContent: homeStartingContent,
+      homeData: foundPosts
+    });
+  }).catch(function(err){
+      console.log("No Posts Found\n\n",err);
   });
+
 });
 
-app.get("/blogPosts/:postName", function (req, res) {
+app.get("/blogPosts/:postID", function (req, res) {
   //converting all to lowercase anf without kebabs (-) 
-  const requestedTitle = _.lowerCase(req.params.postName);
-
-  mainPost.forEach(element => {
-    const storedTitle = _.lowerCase(element.title);
-    if (requestedTitle === storedTitle) {
-      res.render("post", {
-        currentTitle: element.title,
-        currentPost: element.post
-      });
-    }
+  const postID = req.params.postID;
+  Post.findOne({_id: postID}).then(function(foundPost){
+    res.render("post", {
+            currentTitle: foundPost.title,
+            currentPost: foundPost.content
+          });
+  }).catch(function(err){
+    console.log(err);
   });
 });
 
-// app.get("/post",function(req,res){
-//   console.log(1);
-//   res.redirect("/blogPosts/:postName");
-//   console.log(2);
-// })
 
 app.get("/about", function (req, res) {
   res.render("about", { aboutData: aboutContent });
@@ -59,11 +74,11 @@ app.get("/compose", function (req, res) {
 });
 
 app.post("/compose", function (req, res) {
-  const dataPost = {
+  const postDoc = new Post({
     title: req.body.composeMessageTitle,
-    post: req.body.composeMessageData
-  };
-  mainPost.push(dataPost);
+    content: req.body.composeMessageData
+  });
+  postDoc.save();
   res.redirect("/");
 });
 
@@ -78,3 +93,9 @@ app.post("/compose", function (req, res) {
 app.listen(3060, function () {
   console.log("Server started on port 3060");
 });
+
+
+}
+
+
+
