@@ -82,14 +82,6 @@ app.post("/compose", function (req, res) {
   res.redirect("/");
 });
 
-
-
-
-
-
-
-
-
 app.listen(3060, function () {
   console.log("Server started on port 3060");
 });
