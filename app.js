@@ -48,7 +48,7 @@ app.get("/", function (req, res) {
 });
 
 app.get("/blogPosts/:postID", function (req, res) {
-  //converting all to lowercase anf without kebabs (-) 
+
   const postID = req.params.postID;
   Post.findOne({_id: postID}).then(function(foundPost){
     res.render("post", {
